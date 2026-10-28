@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TAG Master: Indogrosir Connect</title>
+    <style>
+        /* CSS Variables - Neo Brutalism Palette */
+        :root {
+            --bg-color: #f4f4f0;
+            --primary: #FFD166;
+            --secondary: #EF476F;
+            --tertiary: #118AB2;
+            --success: #06D6A0;
+            --dark: #000000;
+            --border-width: 4px;
+            --shadow-offset: 6px;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--dark);
+            overflow-x: hidden;
+            background-image: radial-gradient(circle, #000 2px, transparent 2.5px);
+            background-size: 30px 30px;
+        }
+
+        /* Neo-Brutalism Utilities */
+        .brutal-box {
+            background: #fff;
+            border: var(--border-width) solid var(--dark);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .brutal-btn {
+            background: var(--primary);
+            color: var(--dark);
+            border: var(--border-width) solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+            font-weight: 800;
+            font-size: 1.1rem;
+            padding: 12px 24px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.1s ease;
+            display: inline-block;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .brutal-btn:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0 0 0 var(--dark);
+        }
+
+        .brutal-btn.secondary { background: var(--secondary); color: #fff; }
+        .brutal-btn.tertiary { background: var(--tertiary); color: #fff; }
+        .brutal-btn.success { background: var(--success); }
+
+        .brutal-input {
+            width: 100%;
+            padding: 12px;
+            border: var(--border-width) solid var(--dark);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            background: #fff;
+        }
+
+        .brutal-input:focus {
+            outline: none;
+            background: #e9ecef;
+        }
+
+        h1, h2, h3 {
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screen {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Game Header */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            border: var(--border-width) solid var(--dark);
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 4px 4px 0 var(--dark);
+            margin-bottom: 20px;
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+        }
+
+        .progress-container {
+            flex: 1;
+            margin: 0 15px;
+            height: 25px;
+            background: #eee;
+            border: 2px solid var(--dark);
+            border-radius: 12.5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-right: 2px solid var(--dark);
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: var(--dark);
+            mix-blend-mode: overlay;
+        }
+
+        .status-badges span {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        /* Game Board (Connect the Dots) */
+        .game-board {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 0;
+            user-select: none;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            width: 45%;
+            z-index: 10;
+        }
+
+        .node-container {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border: 3px solid var(--dark);
+            border-radius: 8px;
+            box-shadow: 4px 4px 0 var(--dark);
+            padding: 15px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .node-container:active {
+            transform: scale(0.98);
+        }
+
+        .node-container.left-node { justify-content: flex-end; text-align: right; background: var(--primary); }
+        .node-container.right-node { justify-content: flex-start; text-align: left; background: var(--success); }
+
+        .dot {
+            width: 24px;
+            height: 24px;
+            background: var(--dark);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 2px var(--dark);
+        }
+
+        .left-node .dot { right: -12px; }
+        .right-node .dot { left: -12px; }
+
+        .node-text {
+            font-weight: bold;
+            font-size: 1rem;
+            pointer-events: none;
+        }
+
+        /* SVG Canvas for Lines */
+        #line-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            overflow: visible;
+        }
+
+        path.line {
+            fill: none;
+            stroke: var(--dark);
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-dasharray: 10;
+            animation: dash 1s linear infinite;
+        }
+
+        path.line.solid {
+            stroke-dasharray: none;
+            animation: none;
+        }
+
+        @keyframes dash {
+            to { stroke-dashoffset: -20; }
+        }
+
+        /* Popups and Toasts */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--secondary);
+            color: #fff;
+            padding: 10px 20px;
+            border: 3px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+            border-radius: 8px;
+            font-weight: bold;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .toast.show { opacity: 1; }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+        .popup-overlay.active { display: flex; }
+
+        .certificate {
+            background: #fff;
+            border: 8px solid var(--primary);
+            text-align: center;
+            padding: 30px;
+            background-image: linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%, #fff), linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%, #fff);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+
+        .footer {
+            text-align: center;
+            font-weight: bold;
+            margin-top: auto;
+            padding: 20px 0;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .node-text { font-size: 0.85rem; }
+            .node-container { padding: 10px; }
+            .dot { width: 18px; height: 18px; }
+            .left-node .dot { right: -9px; }
+            .right-node .dot { left: -9px; }
+            .game-header { flex-wrap: wrap; gap: 10px; }
+            .progress-container { width: 100%; margin: 10px 0; order: 3; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <!-- Screen 1: Gateway / Login -->
+    <div id="screen-login" class="screen active">
+        <div class="brutal-box" style="text-align: center; background: var(--primary);">
+            <h1 style="font-size: 2.5rem; color: #fff; text-shadow: 3px 3px 0 var(--dark);">TAG Master</h1>
+            <h2 style="background: var(--dark); color: #fff; display: inline-block; padding: 5px 15px; transform: rotate(-2deg);">Indogrosir Connect</h2>
+        </div>
+        
+        <div class="brutal-box">
+            <h3>Masuk untuk Memulai</h3>
+            <p style="margin-bottom: 15px; font-weight: bold;">Misi Anda: Meminimalisir kerugian toko dan menjaga rotasi barang!</p>
+            <input type="text" id="input-nama" class="brutal-input" placeholder="Nama Lengkap" required>
+            <input type="text" id="input-nik" class="brutal-input" placeholder="NIK" required>
+            <button class="brutal-btn" onclick="startGame()">Siap Bermain! 🚀</button>
+        </div>
+        <div class="footer">Education & Training Dept. © 2026</div>
+    </div>
+
+    <!-- Screen 2: Mission Briefing -->
+    <div id="screen-briefing" class="screen">
+        <div class="brutal-box" style="background: var(--tertiary); color: #fff;">
+            <h2>Misi Operasional 📋</h2>
+        </div>
+        <div class="brutal-box">
+            <h3><span id="player-name-display"></span>, Perhatian!</h3>
+            <p><strong>Kenapa game ini penting? (WHY)</strong><br>
+            Terdapat 18 jenis TAG barang, namun TAG H, O, A, dan N memiliki dampak kerugian terbesar jika tidak ditangani dengan SOP yang benar. Beban biaya akan ditanggung cabang!</p>
+            <br>
+            <p><strong>Cara Bermain:</strong></p>
+            <ul style="margin-left: 20px; font-weight: bold; line-height: 1.5;">
+                <li>Tarik garis dari titik (dot) sebelah kiri ke jawaban yang tepat di titik sebelah kanan.</li>
+                <li>Setiap jawaban benar = Poin & Bintang ⭐</li>
+                <li>Setiap jawaban salah = Nyawa berkurang ❤️</li>
+                <li>Selesaikan 3 stage dan 1 level bonus untuk meraih sertifikat "TAG Master".</li>
+            </ul>
+            <br>
+            <button class="brutal-btn success" onclick="startLevel(1)">Mulai Bertugas! ⚡</button>
+        </div>
+    </div>
+
+    <!-- Screen 3: Main Game -->
+    <div id="screen-game" class="screen">
+        <div class="game-header">
+            <div class="status-badges">
+                <span id="score-display">⭐ 0</span>
+                <span id="lives-display">❤️❤️❤️</span>
+            </div>
+            <div class="progress-container">
+                <div id="progress-bar" class="progress-bar"></div>
+                <div id="progress-text" class="progress-text">0%</div>
+            </div>
+            <button id="mute-btn" class="brutal-btn" style="padding: 5px 10px;" onclick="toggleMute()">🔊</button>
+        </div>
+        
+        <div class="brutal-box" style="padding: 10px; margin-bottom: 10px; background: var(--bg-color);">
+            <h3 id="level-title" style="margin: 0; text-align: center;">Level 1: Pemula</h3>
+            <p id="level-hint" style="text-align: center; font-size: 0.9rem; font-weight: bold;"></p>
+        </div>
+
+        <div class="game-board" id="game-board">
+            <svg id="line-canvas"></svg>
+            <div class="column" id="left-column"></div>
+            <div class="column" id="right-column"></div>
+        </div>
+    </div>
+
+    <!-- Screen 4: Results -->
+    <div id="screen-results" class="screen">
+        <div class="brutal-box certificate">
+            <h1 style="color: var(--dark); font-size: 2.5rem;">Sertifikat</h1>
+            <h2 style="background: var(--dark); color: var(--primary); display: inline-block; padding: 5px 15px;">TAG MASTER INDOGROSIR</h2>
+            <br><br>
+            <p style="font-size: 1.2rem; font-weight: bold;">Diberikan kepada:</p>
+            <h2 id="cert-name" style="color: var(--secondary); font-size: 2rem; margin: 10px 0;"></h2>
+            <p style="font-weight: bold;">NIK: <span id="cert-nik"></span></p>
+            <br>
+            <p id="result-feedback" style="font-weight: bold;"></p>
+            <br>
+            <div style="background: #fff; padding: 15px; border: 3px solid var(--dark); text-align: left; max-height: 200px; overflow-y: auto;" id="history-log">
+                <!-- History appended here -->
+            </div>
+            <br>
+            <button class="brutal-btn" onclick="location.reload()">Main Lagi 🔄</button>
+        </div>
+        <div class="footer">Education & Training Dept. © 2026</div>
+    </div>
+</div>
+
+<!-- Bonus Popup -->
+<div id="bonus-popup" class="popup-overlay">
+    <div class="brutal-box" style="background: var(--success); max-width: 400px; text-align: center;">
+        <h2 style="color: #fff; text-shadow: 2px 2px 0 var(--dark);">ILMU BARU! 💡</h2>
+        <p style="font-weight: bold; font-size: 1.1rem; background: #fff; padding: 15px; border: 2px solid var(--dark); border-radius: 8px;">
+            Proses <strong>Repacking</strong> ini sangat penting karena akan berpengaruh langsung pada <strong>Average Cost (Acost)</strong> toko dan sistem <strong>PB Otomatis</strong>!
+        </p>
+        <button class="brutal-btn" style="margin-top: 15px;" onclick="finishGame()">Lanjut & Selesaikan</button>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    // --- Data & State ---
+    const levelsData = [
+        {
+            level: 1,
+            title: "Level 1: Pengenalan Definisi TAG (Pemula)",
+            hint: "Hubungkan simbol TAG dengan definisinya yang tepat.",
+            pairs: [
+                { id: 'q1', left: 'Tag H', right: 'Barang Habiskan Toko / Beli Putus' },
+                { id: 'q2', left: 'Tag O', right: 'Barang Tidak Boleh Order' },
+                { id: 'q3', left: 'Tag A', right: 'Barang Alokasi Supplier / MD' },
+                { id: 'q4', left: 'Tag N', right: 'Barang Tidak Bisa Transaksi di Kasir' }
+            ]
+        },
+        {
+            level: 2,
+            title: "Level 2: Karakteristik & Usia TAG (Menengah)",
+            hint: "Pahami sifat barang, hubungkan usia/sifat dengan jenis TAG-nya.",
+            pairs: [
+                { id: 'q5', left: 'Umur TAG 1 Bulan', right: 'Tag H dan Tag A' },
+                { id: 'q6', left: 'Umur TAG 2 Minggu', right: 'Tag O' },
+                { id: 'q7', left: 'Trend Penjualan Menurun', right: 'Tag N' }
+            ]
+        },
+        {
+            level: 3,
+            title: "Level 3: Eksekusi Penanganan (Ahli)",
+            hint: "Terapkan SOP, hubungkan situasi dengan tindakan operasional.",
+            pairs: [
+                { id: 'q8', left: 'Penanganan Tag H & A', right: 'Pastikan item habis terjual, pajang dekat area Kasir' },
+                { id: 'q9', left: 'Aturan Wajib Tag N', right: 'Stock Fisik, Plano, dan LPP harus 0 (Nol)' },
+                { id: 'q10', left: 'Barang Tag N diturunkan', right: 'Buat dokumen BSB untuk serah terima dengan Logistik' }
+            ]
+        },
+        {
+            level: 4,
+            title: "Level Bonus: Repacking Puzzle",
+            hint: "Pindahkan stock ke kemasan baru.",
+            pairs: [
+                { id: 'q11', left: 'Satu PLU / Banyak Barang', right: 'Repacking' }
+            ]
+        }
+    ];
+
+    let gameState = {
+        name: '',
+        nik: '',
+        currentLevelIndex: 0,
+        score: 0,
+        lives: 3,
+        totalQuestions: 11, // 4+3+3+1
+        answered: 0,
+        history: [],
+        isMuted: false
+    };
+
+    // --- Audio System (Web Audio API) ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let actx;
+    let bgmOsc;
+    let bgmGain;
+    let isBgmPlaying = false;
+    
+    function initAudio() {
+        if(!actx) actx = new AudioContext();
+        if(actx.state === 'suspended') actx.resume();
+    }
+
+    function playBGM() {
+        if(gameState.isMuted) return;
+        if(isBgmPlaying) return;
+        initAudio();
+        
+        // Gen Z quirky vibe sequence
+        const melody = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63]; // C E G C G E
+        let noteIdx = 0;
+        
+        bgmGain = actx.createGain();
+        bgmGain.gain.value = 0.05; // Low volume
+        bgmGain.connect(actx.destination);
+        
+        function scheduleNextNote() {
+            if(!isBgmPlaying) return;
+            bgmOsc = actx.createOscillator();
+            bgmOsc.type = 'triangle';
+            bgmOsc.frequency.value = melody[noteIdx];
+            bgmOsc.connect(bgmGain);
+            
+            const now = actx.currentTime;
+            bgmOsc.start(now);
+            bgmOsc.stop(now + 0.25);
+            
+            noteIdx = (noteIdx + 1) % melody.length;
+            setTimeout(scheduleNextNote, 300);
+        }
+        
+        isBgmPlaying = true;
+        scheduleNextNote();
+    }
+
+    function stopBGM() {
+        isBgmPlaying = false;
+        if(bgmOsc) bgmOsc.stop();
+        if(bgmGain) bgmGain.disconnect();
+    }
+
+    function playSFX(type) {
+        if(gameState.isMuted) return;
+        initAudio();
+        const osc = actx.createOscillator();
+        const gain = actx.createGain();
+        osc.connect(gain);
+        gain.connect(actx.destination);
+        
+        const now = actx.currentTime;
+        if(type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(440, now);
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        } else if(type === 'wrong') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
+        } else if(type === 'win') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(440, now);
+            osc.frequency.setValueAtTime(554.37, now + 0.2);
+            osc.frequency.setValueAtTime(659.25, now + 0.4);
+            osc.frequency.setValueAtTime(880, now + 0.6);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.linearRampToValueAtTime(0, now + 1);
+            osc.start(now);
+            osc.stop(now + 1);
+        }
+    }
+
+    function toggleMute() {
+        gameState.isMuted = !gameState.isMuted;
+        document.getElementById('mute-btn').innerText = gameState.isMuted ? '🔇' : '🔊';
+        if(gameState.isMuted) stopBGM();
+        else playBGM();
+    }
+
+    // --- UI/Game Logic ---
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function showToast(msg, color) {
+        const toast = document.getElementById('toast');
+        toast.innerText = msg;
+        toast.style.background = color;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function startGame() {
+        const name = document.getElementById('input-nama').value.trim();
+        const nik = document.getElementById('input-nik').value.trim();
+        if(!name || !nik) {
+            showToast("Nama dan NIK harus diisi!", "var(--secondary)");
+            return;
+        }
+        gameState.name = name;
+        gameState.nik = nik;
+        document.getElementById('player-name-display').innerText = name;
+        
+        initAudio(); // Initialize audio context on first user gesture
+        playBGM();
+        showScreen('screen-briefing');
+    }
+
+    function startLevel(levelNum) {
+        showScreen('screen-game');
+        renderLevel(gameState.currentLevelIndex);
+        updateHUD();
+    }
+
+    // --- Core Connect the Dots Mechanics ---
+    let drawingLine = null;
+    let startNode = null;
+    let solvedPairs = new Set();
+    
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function renderLevel(index) {
+        const levelData = levelsData[index];
+        document.getElementById('level-title').innerText = levelData.title;
+        document.getElementById('level-hint').innerText = levelData.hint;
+        
+        const leftCol = document.getElementById('left-column');
+        const rightCol = document.getElementById('right-column');
+        const canvas = document.getElementById('line-canvas');
+        
+        leftCol.innerHTML = '';
+        rightCol.innerHTML = '';
+        canvas.innerHTML = ''; // Clear SVG
+        solvedPairs.clear();
+
+        // Separate and shuffle
+        let leftItems = [...levelData.pairs];
+        let rightItems = [...levelData.pairs];
+        
+        leftItems = shuffleArray(leftItems);
+        rightItems = shuffleArray(rightItems);
+
+        leftItems.forEach(item => {
+            let div = createNodeElement(item.left, item.id, 'left-node');
+            leftCol.appendChild(div);
+        });
+
+        rightItems.forEach(item => {
+            let div = createNodeElement(item.right, item.id, 'right-node');
+            rightCol.appendChild(div);
+        });
+        
+        // Add achievement toast for starting level if not L1
+        if(index > 0) {
+            showToast(`Misi ${index} Selesai! Lanjut Level ${index+1}`, "var(--tertiary)");
+        }
+    }
+
+    function createNodeElement(text, id, className) {
+        const div = document.createElement('div');
+        div.className = `node-container ${className}`;
+        div.dataset.id = id;
+        
+        const textSpan = document.createElement('span');
+        textSpan.className = 'node-text';
+        textSpan.innerText = text;
+        
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        
+        div.appendChild(textSpan);
+        div.appendChild(dot);
+        
+        // Event Listeners for drawing
+        if(className === 'left-node') {
+            div.addEventListener('mousedown', startDraw);
+            div.addEventListener('touchstart', startDraw, {passive: false});
+        }
+        
+        return div;
+    }
+
+    function getDotCenter(element) {
+        const dot = element.querySelector('.dot');
+        const rect = dot.getBoundingClientRect();
+        const svgRect = document.getElementById('line-canvas').getBoundingClientRect();
+        
+        return {
+            x: rect.left + rect.width / 2 - svgRect.left,
+            y: rect.top + rect.height / 2 - svgRect.top
+        };
+    }
+
+    function startDraw(e) {
+        if(solvedPairs.has(this.dataset.id)) return;
+        if(e.type === 'touchstart') e.preventDefault(); // Stop scrolling while drawing
+
+        startNode = this;
+        const pos = getDotCenter(this);
+        
+        const svg = document.getElementById('line-canvas');
+        drawingLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        drawingLine.classList.add('line');
+        drawingLine.setAttribute('d', `M ${pos.x} ${pos.y} L ${pos.x} ${pos.y}`);
+        svg.appendChild(drawingLine);
+        
+        document.addEventListener('mousemove', draw);
+        document.addEventListener('touchmove', draw, {passive: false});
+        document.addEventListener('mouseup', endDraw);
+        document.addEventListener('touchend', endDraw);
+    }
+
+    function draw(e) {
+        if(!drawingLine) return;
+        if(e.type === 'touchmove') e.preventDefault();
+
+        const svgRect = document.getElementById('line-canvas').getBoundingClientRect();
+        let clientX = e.clientX || e.touches[0].clientX;
+        let clientY = e.clientY || e.touches[0].clientY;
+        
+        let x = clientX - svgRect.left;
+        let y = clientY - svgRect.top;
+        
+        const startPos = getDotCenter(startNode);
+        
+        // SVG Curve logic for visual flair (Bezier curve)
+        const curveOffset = Math.abs(x - startPos.x) / 2;
+        drawingLine.setAttribute('d', `M ${startPos.x} ${startPos.y} C ${startPos.x + curveOffset} ${startPos.y}, ${x - curveOffset} ${y}, ${x} ${y}`);
+    }
+
+    function endDraw(e) {
+        document.removeEventListener('mousemove', draw);
+        document.removeEventListener('touchmove', draw);
+        document.removeEventListener('mouseup', endDraw);
+        document.removeEventListener('touchend', endDraw);
+        
+        if(!drawingLine) return;
+
+        let clientX, clientY;
+        if (e.type === 'touchend') {
+            clientX = e.changedTouches[0].clientX;
+            clientY = e.changedTouches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        // Find element under cursor
+        const elemBelow = document.elementFromPoint(clientX, clientY);
+        const targetNode = elemBelow ? elemBelow.closest('.right-node') : null;
+
+        if(targetNode && !solvedPairs.has(targetNode.dataset.id)) {
+            checkMatch(startNode, targetNode);
+        } else {
+            // Remove line if dropped in void
+            drawingLine.remove();
+        }
+        
+        drawingLine = null;
+        startNode = null;
+    }
+
+    function checkMatch(start, target) {
+        const startId = start.dataset.id;
+        const targetId = target.dataset.id;
+        const startText = start.querySelector('.node-text').innerText;
+        const targetText = target.querySelector('.node-text').innerText;
+        
+        if(startId === targetId) {
+            // Correct
+            playSFX('correct');
+            showToast("Benar! ⭐", "var(--success)");
+            solvedPairs.add(startId);
+            
+            // Lock line position
+            const startPos = getDotCenter(start);
+            const targetPos = getDotCenter(target);
+            const curveOffset = Math.abs(targetPos.x - startPos.x) / 2;
+            drawingLine.setAttribute('d', `M ${startPos.x} ${startPos.y} C ${startPos.x + curveOffset} ${startPos.y}, ${targetPos.x - curveOffset} ${targetPos.y}, ${targetPos.x} ${targetPos.y}`);
+            drawingLine.classList.add('solid');
+            
+            // Visual change
+            start.style.opacity = '0.7';
+            target.style.opacity = '0.7';
+            start.style.pointerEvents = 'none';
+            target.style.pointerEvents = 'none';
+            
+            gameState.score += 10;
+            gameState.history.push({ text: `✔️ ${startText} -> ${targetText}`, correct: true });
+            
+            updateHUD();
+            
+            // Check level complete
+            if(solvedPairs.size === levelsData[gameState.currentLevelIndex].pairs.length) {
+                setTimeout(nextLevel, 1000);
+            }
+        } else {
+            // Wrong
+            playSFX('wrong');
+            showToast("Ouch! Salah sambung 💔", "var(--secondary)");
+            drawingLine.remove();
+            
+            gameState.lives--;
+            gameState.history.push({ text: `❌ ${startText} -> ${targetText}`, correct: false });
+            
+            updateHUD();
+            
+            if(gameState.lives <= 0) {
+                setTimeout(gameOver, 500);
+            }
+        }
+    }
+
+    function updateHUD() {
+        document.getElementById('score-display').innerText = `⭐ ${gameState.score}`;
+        
+        let hearts = '';
+        for(let i=0; i<gameState.lives; i++) hearts += '❤️';
+        for(let i=gameState.lives; i<3; i++) hearts += '🖤';
+        document.getElementById('lives-display').innerText = hearts;
+        
+        let answeredTotal = 0;
+        for(let i=0; i<gameState.currentLevelIndex; i++) {
+            answeredTotal += levelsData[i].pairs.length;
+        }
+        answeredTotal += solvedPairs.size;
+        
+        const pct = Math.floor((answeredTotal / gameState.totalQuestions) * 100);
+        document.getElementById('progress-bar').style.width = `${pct}%`;
+        document.getElementById('progress-text').innerText = `${pct}%`;
+    }
+
+    function nextLevel() {
+        gameState.currentLevelIndex++;
+        if(gameState.currentLevelIndex < levelsData.length) {
+            // Check if it's the bonus level
+            if(gameState.currentLevelIndex === levelsData.length - 1) {
+                showToast("🔥 LEVEL BONUS TERBUKA! 🔥", "var(--primary)");
+            }
+            renderLevel(gameState.currentLevelIndex);
+        } else {
+            // Game Complete logic check based on bonus
+            if(gameState.currentLevelIndex === levelsData.length) {
+                document.getElementById('bonus-popup').classList.add('active');
+            }
+        }
+    }
+
+    function gameOver() {
+        stopBGM();
+        playSFX('wrong');
+        alert("Misi Gagal! Terlalu banyak kerugian toko akibat penanganan TAG yang salah. Silakan ulangi pelatihan.");
+        location.reload();
+    }
+
+    function finishGame() {
+        document.getElementById('bonus-popup').classList.remove('active');
+        stopBGM();
+        playSFX('win');
+        
+        showScreen('screen-results');
+        document.getElementById('cert-name').innerText = gameState.name;
+        document.getElementById('cert-nik').innerText = gameState.nik;
+        
+        let feedbackStr = `Skor Akhir: ${gameState.score} Poin. `;
+        if(gameState.lives === 3) feedbackStr += "SEMPURNA! Anda benar-benar master SOP Indogrosir.";
+        else feedbackStr += "Kerja bagus! Selalu perhatikan SOP penanganan barang.";
+        document.getElementById('result-feedback').innerText = feedbackStr;
+        
+        const histContainer = document.getElementById('history-log');
+        histContainer.innerHTML = '<h4>Log Aktivitas:</h4><br>';
+        gameState.history.forEach(log => {
+            let p = document.createElement('p');
+            p.innerText = log.text;
+            p.style.color = log.correct ? 'var(--success)' : 'var(--secondary)';
+            p.style.marginBottom = '5px';
+            histContainer.appendChild(p);
+        });
+    }
+
+</script>
+</body>
+</html>
